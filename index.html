@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CALCU</title>
+<title>NOT-A-CALCULATOR</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -160,6 +160,8 @@
     color: var(--pink);
   }
 
+  /* ---- reveal overlay ---- */
+
   .overlay{
     position: fixed;
     inset: 0;
@@ -228,6 +230,7 @@
 </head>
 <body>
 
+  <div class="rig">
     <div class="calc" id="calc">
       <div class="calc-inner">
         <div class="screen" id="screen">
@@ -262,13 +265,12 @@
         </div>
       </div>
     </div>
-  </>
+  </div>
 
   <div class="overlay" id="overlay">
-    <div class="overlay-tag">HAHAHAHAHAHA</div>
     <div class="video-frame">
-      <video id="video" controls autoplay playsinline>
-        <source src="walaykamo.mp4" type="video/mp4">
+      <video id="video" controls playsinline>
+        <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
       </video>
     </div>
     <button class="close-btn" id="closeBtn">close</button>
@@ -286,20 +288,8 @@
   let expr = '';
 
   function render(){
-    exprEl.textContent = expr.length ? expr : '\u00A0';
-    resultEl.textContent = expr.length ? previewValue() : '0';
-  }
-
-  function previewValue(){
-    try{
-      const safe = expr.replace(/[^0-9+\-*/.%()]/g, '');
-      if(!safe) return '0';
-      const val = Function('"use strict";return (' + safe + ')')();
-      if (val === undefined || Number.isNaN(val) || !Number.isFinite(val)) return '0';
-      return String(val);
-    }catch(e){
-      return expr;
-    }
+    exprEl.textContent = '\u00A0';
+    resultEl.textContent = expr.length ? expr : '0';
   }
 
   document.querySelectorAll('button[data-value]').forEach(btn => {
