@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CALCU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #131316;
+    --card: #1c1c22;
+    --card-edge: #2a2a32;
+    --screen: #0e0e11;
+    --lime: #c6ff3d;
+    --pink: #ff3dae;
+    --text: #f1f1f3;
+    --dim: #8a8a94;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(198,255,61,0.06), transparent 40%),
+      radial-gradient(circle at 80% 85%, rgba(255,61,174,0.07), transparent 45%),
+      var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 24px;
+  }
+
+  .rig{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+  }
+
+  .label{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    letter-spacing:0.3em;
+    font-size:12px;
+    color:var(--dim);
+    text-transform:uppercase;
+  }
+
+  .calc{
+    width: 320px;
+    background: var(--card);
+    border: 1px solid var(--card-edge);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6);
+    position: relative;
+    perspective: 1200px;
+  }
+
+  .calc-inner{
+    transition: transform 0.7s cubic-bezier(.2,.9,.3,1.2);
+    transform-style: preserve-3d;
+  }
+
+  .calc.flip .calc-inner{
+    transform: rotateY(180deg);
+  }
+
+  .screen{
+    background: var(--screen);
+    border-radius: 14px;
+    padding: 22px 16px 14px;
+    margin-bottom: 16px;
+    text-align: right;
+    border: 1px solid #000;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.6);
+    backface-visibility: hidden;
+  }
+
+  .expr{
+    font-size: 13px;
+    color: var(--dim);
+    min-height: 16px;
+    letter-spacing: 0.02em;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .result{
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 34px;
+    font-weight: 700;
+    margin-top: 4px;
+    color: var(--lime);
+    overflow-x: auto;
+    white-space: nowrap;
+    transition: color 0.2s;
+  }
+
+  .glitching .result{
+    animation: glitch 0.35s steps(2, end) 3;
+    color: var(--pink);
+  }
+
+  @keyframes glitch{
+    0%{ transform: translate(0,0); }
+    25%{ transform: translate(-2px,1px); }
+    50%{ transform: translate(2px,-1px); }
+    75%{ transform: translate(-1px,-1px); }
+    100%{ transform: translate(0,0); }
+  }
+
+  .pad{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    backface-visibility: hidden;
+  }
+
+  button{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 16px 0;
+    border-radius: 12px;
+    border: 1px solid var(--card-edge);
+    background: #232329;
+    color: var(--text);
+    cursor: pointer;
+    transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+
+  button:active{ transform: scale(0.94); }
+
+  button:hover{ border-color: #3a3a44; }
+
+  .op{
+    background: #262230;
+    color: var(--lime);
+  }
+
+  .op.equals{
+    background: var(--lime);
+    color: #10130a;
+    font-weight: 700;
+    grid-column: span 2;
+  }
+
+  .op.equals:hover{ filter: brightness(1.06); }
+
+  .zero{ grid-column: span 2; }
+
+  .clear{
+    background: #2a1e22;
+    color: var(--pink);
+  }
+
+  .overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(6,6,8,0.92);
+    backdrop-filter: blur(6px);
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    justify-content:center;
+    gap: 18px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+    z-index: 50;
+  }
+
+  .overlay.show{
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .overlay-tag{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    letter-spacing: 0.25em;
+    font-size: 12px;
+    color: var(--lime);
+    text-transform: uppercase;
+  }
+
+  .video-frame{
+    width: min(90vw, 520px);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--card-edge);
+    box-shadow: 0 40px 80px -20px rgba(0,0,0,0.7);
+    background: #000;
+  }
+
+  video{
+    display:block;
+    width: 100%;
+  }
+
+  .close-btn{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: transparent;
+    border: 1px solid var(--card-edge);
+    color: var(--dim);
+    padding: 10px 20px;
+    border-radius: 100px;
+    cursor: pointer;
+  }
+
+  .close-btn:hover{
+    color: var(--text);
+    border-color: var(--pink);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .calc-inner, button, .overlay{ transition: none; }
+    .glitching .result{ animation: none; }
+  }
+</style>
+</head>
+<body>
+
+    <div class="calc" id="calc">
+      <div class="calc-inner">
+        <div class="screen" id="screen">
+          <div class="expr" id="expr">&nbsp;</div>
+          <div class="result" id="result">0</div>
+        </div>
+
+        <div class="pad">
+          <button class="clear" data-action="clear">AC</button>
+          <button class="clear" data-action="back">⌫</button>
+          <button class="op" data-value="%">%</button>
+          <button class="op" data-value="/">÷</button>
+
+          <button data-value="7">7</button>
+          <button data-value="8">8</button>
+          <button data-value="9">9</button>
+          <button class="op" data-value="*">×</button>
+
+          <button data-value="4">4</button>
+          <button data-value="5">5</button>
+          <button data-value="6">6</button>
+          <button class="op" data-value="-">−</button>
+
+          <button data-value="1">1</button>
+          <button data-value="2">2</button>
+          <button data-value="3">3</button>
+          <button class="op" data-value="+">+</button>
+
+          <button class="zero" data-value="0">0</button>
+          <button data-value=".">.</button>
+          <button class="op equals" data-action="equals">=</button>
+        </div>
+      </div>
+    </div>
+  </>
+
+  <div class="overlay" id="overlay">
+    <div class="overlay-tag">HAHAHAHAHAHA</div>
+    <div class="video-frame">
+      <video id="video" controls autoplay playsinline>
+        <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
+      </video>
+    </div>
+    <button class="close-btn" id="closeBtn">close</button>
+  </div>
+
+<script>
+  const exprEl = document.getElementById('expr');
+  const resultEl = document.getElementById('result');
+  const screenEl = document.getElementById('screen');
+  const calcEl = document.getElementById('calc');
+  const overlay = document.getElementById('overlay');
+  const video = document.getElementById('video');
+  const closeBtn = document.getElementById('closeBtn');
+
+  let expr = '';
+
+  function render(){
+    exprEl.textContent = expr.length ? expr : '\u00A0';
+    resultEl.textContent = expr.length ? previewValue() : '0';
+  }
+
+  function previewValue(){
+    try{
+      const safe = expr.replace(/[^0-9+\-*/.%()]/g, '');
+      if(!safe) return '0';
+      const val = Function('"use strict";return (' + safe + ')')();
+      if (val === undefined || Number.isNaN(val) || !Number.isFinite(val)) return '0';
+      return String(val);
+    }catch(e){
+      return expr;
+    }
+  }
+
+  document.querySelectorAll('button[data-value]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      expr += btn.dataset.value;
+      render();
+    });
+  });
+
+  document.querySelector('[data-action="clear"]').addEventListener('click', () => {
+    expr = '';
+    render();
+  });
+
+  document.querySelector('[data-action="back"]').addEventListener('click', () => {
+    expr = expr.slice(0, -1);
+    render();
+  });
+
+  document.querySelector('[data-action="equals"]').addEventListener('click', () => {
+    screenEl.classList.add('glitching');
+
+    setTimeout(() => {
+      screenEl.classList.remove('glitching');
+      overlay.classList.add('show');
+      video.currentTime = 0;
+      video.play().catch(() => {});
+    }, 380);
+  });
+
+  closeBtn.addEventListener('click', closeOverlay);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeOverlay();
+  });
+
+  function closeOverlay(){
+    overlay.classList.remove('show');
+    video.pause();
+  }
+
+  render();
+</script>
+</body>
+</html>
